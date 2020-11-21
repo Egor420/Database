@@ -9,7 +9,8 @@ const menuService = require('./services/menu')
 const orderService = require('./services/order')
 const secret = 'jwt_secret_token'
 const authMiddleware = require('./middleware/auth')
-
+const cors = require('cors')
+app.use(cors())
 app.use(bodyParser.json())
 app.route('/now').get(async (req, res) => {
     const pgclient = await pool.connect()
@@ -67,10 +68,9 @@ async function checkAuth(req) {
   }
   })
 
-  app.route('/make_order/:id').post(async (req, res) => {
+  app.route('/make_order').post(authMiddleware, async (req, res) => {
     try {
-      const { id } = req.params
-      const orderID = await orderService.makeOrder(id, req.body)
+      const orderID = await orderService.makeOrder(req.client.id, req.body)
   
       res.send({
         order_id: orderID,
@@ -131,4 +131,8 @@ app.route('/menu').get(async (req, res) => {
         error: err.message,
       })
     }
+  })
+
+  app.listen(80, () => {
+    console.log('Server started on http://localhost:80')
   })
